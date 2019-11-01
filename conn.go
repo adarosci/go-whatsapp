@@ -125,7 +125,7 @@ func NewConn(timeout time.Duration) (*Conn, error) {
 		
 		clientVersion:   "0.1.0",
 		longClientName:  "BrzoMessages",
-		shortClientName: "brzo-whatsapp",
+		shortClientName: "Brzo-Whatsapp",
 	}
 	return wac, wac.connect()
 }
