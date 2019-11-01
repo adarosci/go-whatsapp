@@ -118,7 +118,7 @@ func NewConn(timeout time.Duration) (*Conn, error) {
 		Store:      newStore(),
 
 		longClientName:  "BrzoMessages",
-		shortClientName: "brzo-whatsapp",
+		shortClientName: "Brzo-Whatsapp",
 	}
 	return wac, wac.connect()
 }
@@ -132,7 +132,7 @@ func NewConnWithProxy(timeout time.Duration, proxy func(*http.Request) (*url.URL
 		Store:      newStore(),
 
 		longClientName:  "BrzoMessages",
-		shortClientName: "brzo-whatsapp",
+		shortClientName: "Brzo-Whatsapp",
 		Proxy:           proxy,
 	}
 	return wac, wac.connect()
