@@ -6,10 +6,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/Rhymen/go-whatsapp/binary/proto"
+	"github.com/adarosci/go-whatsapp/binary/proto"
 
 	qrcodeTerminal "github.com/Baozisoftware/qrcode-terminal-go"
-	"github.com/Rhymen/go-whatsapp"
+	"github.com/adarosci/go-whatsapp"
 )
 
 func main() {
@@ -44,7 +44,7 @@ func main() {
 			RemoteJid: "number@s.whatsapp.net",
 		},
 		ContextInfo: ContextInfo,
-		Text:        "Message sent by github.com/Rhymen/go-whatsapp",
+		Text:        "Message sent by github.com/adarosci/go-whatsapp",
 	}
 
 	msgId, err := wac.Send(msg)
