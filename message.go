@@ -220,7 +220,7 @@ type MessageInfo struct {
 	PushName  string
 	Status    MessageStatus
 
-	Source *proto.WebMessageInfo
+	Source *proto.WebMessageInfo `json:"-"`
 }
 
 type MessageStatus int
@@ -358,9 +358,9 @@ Provide a io.Reader as Content for message sending.
 type ImageMessage struct {
 	Info          MessageInfo
 	Caption       string
-	Thumbnail     []byte
+	Thumbnail     []byte `json:"-"`
 	Type          string
-	Content       io.Reader
+	Content       io.Reader `json:"-"`
 	url           string
 	mediaKey      []byte
 	fileEncSha256 []byte
@@ -422,10 +422,10 @@ Provide a io.Reader as Content for message sending.
 type VideoMessage struct {
 	Info          MessageInfo
 	Caption       string
-	Thumbnail     []byte
+	Thumbnail     []byte `json:"-"`
 	Length        uint32
 	Type          string
-	Content       io.Reader
+	Content       io.Reader `json:"-"`
 	GifPlayback   bool
 	url           string
 	mediaKey      []byte
@@ -493,7 +493,7 @@ type AudioMessage struct {
 	Info          MessageInfo
 	Length        uint32
 	Type          string
-	Content       io.Reader
+	Content       io.Reader `json:"-"`
 	Ptt           bool
 	url           string
 	mediaKey      []byte
@@ -557,8 +557,8 @@ type DocumentMessage struct {
 	PageCount     uint32
 	Type          string
 	FileName      string
-	Thumbnail     []byte
-	Content       io.Reader
+	Thumbnail     []byte    `json:"-"`
+	Content       io.Reader `json:"-"`
 	url           string
 	mediaKey      []byte
 	fileEncSha256 []byte
