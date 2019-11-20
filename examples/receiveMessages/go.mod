@@ -6,3 +6,5 @@ require (
 )
 
 replace github.com/adarosci/go-whatsapp => ../../
+
+go 1.13
