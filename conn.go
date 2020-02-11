@@ -112,7 +112,7 @@ type listenerWrapper struct {
 Creates a new connection with a given timeout. The websocket connection to the WhatsAppWeb servers get´s established.
 The goroutine for handling incoming messages is started
 */
-func NewConn(timeout time.Duration) (*Conn, error) {
+func NewConn(timeout time.Duration, readBufferSize, writeBufferSize int) (*Conn, error) {
 	wac := &Conn{
 		handler:    make([]Handler, 0),
 		msgCount:   0,
@@ -122,11 +122,11 @@ func NewConn(timeout time.Duration) (*Conn, error) {
 		longClientName:  "BrzoMessages",
 		shortClientName: "Brzo-Whatsapp",
 	}
-	return wac, wac.connect()
+	return wac, wac.connect(readBufferSize, writeBufferSize)
 }
 
 // NewConnWithProxy Create a new connect with a given timeout and a http proxy.
-func NewConnWithProxy(timeout time.Duration, proxy func(*http.Request) (*url.URL, error)) (*Conn, error) {
+func NewConnWithProxy(timeout time.Duration, proxy func(*http.Request) (*url.URL, error), readBufferSize, writeBufferSize int) (*Conn, error) {
 	wac := &Conn{
 		handler:    make([]Handler, 0),
 		msgCount:   0,
@@ -137,11 +137,11 @@ func NewConnWithProxy(timeout time.Duration, proxy func(*http.Request) (*url.URL
 		shortClientName: "Brzo-Whatsapp",
 		Proxy:           proxy,
 	}
-	return wac, wac.connect()
+	return wac, wac.connect(readBufferSize, writeBufferSize)
 }
 
 // connect should be guarded with wsWriteMutex
-func (wac *Conn) connect() (err error) {
+func (wac *Conn) connect(readBufferSize, writeBufferSize int) (err error) {
 	if wac.connected {
 		return ErrAlreadyConnected
 	}
@@ -153,8 +153,8 @@ func (wac *Conn) connect() (err error) {
 	}()
 
 	dialer := &websocket.Dialer{
-		ReadBufferSize:   25 * 1024 * 1024,
-		WriteBufferSize:  10 * 1024 * 1024,
+		ReadBufferSize:   readBufferSize * 1024 * 1024,
+		WriteBufferSize:  writeBufferSize * 1024 * 1024,
 		HandshakeTimeout: wac.msgTimeout,
 		Proxy:            wac.Proxy,
 	}
