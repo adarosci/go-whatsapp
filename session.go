@@ -95,8 +95,8 @@ CheckCurrentServerVersion is based on the login method logic in order to establi
 the current version from the server with the `admin init` command. This can be very useful for automations in which
 you need to quickly perceive new versions (mostly patches) and update your application so it suddenly stops working.
 */
-func CheckCurrentServerVersion() ([]int, error) {
-	wac, err := NewConn(5 * time.Second)
+func CheckCurrentServerVersion(bufferOptions ...int) ([]int, error) {
+	wac, err := NewConn(5*time.Second, bufferOptions...)
 	if err != nil {
 		return nil, fmt.Errorf("fail to create connection")
 	}
@@ -197,7 +197,7 @@ func (wac *Conn) Login(qrChan chan<- string) (Session, error) {
 		return session, ErrAlreadyLoggedIn
 	}
 
-	if err := wac.connect(); err != nil && err != ErrAlreadyConnected {
+	if err := wac.connect(wac.ReadBufferSize, wac.WriteBufferSize); err != nil && err != ErrAlreadyConnected {
 		return session, err
 	}
 
@@ -354,7 +354,7 @@ func (wac *Conn) Restore() error {
 		return ErrInvalidSession
 	}
 
-	if err := wac.connect(); err != nil && err != ErrAlreadyConnected {
+	if err := wac.connect(wac.ReadBufferSize, wac.WriteBufferSize); err != nil && err != ErrAlreadyConnected {
 		return err
 	}
 

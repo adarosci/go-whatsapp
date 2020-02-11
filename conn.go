@@ -95,6 +95,9 @@ type Conn struct {
 	Proxy            func(*http.Request) (*url.URL, error)
 
 	writerLock sync.RWMutex
+
+	ReadBufferSize  int
+	WriteBufferSize int
 }
 
 type websocketWrapper struct {
@@ -112,7 +115,7 @@ type listenerWrapper struct {
 Creates a new connection with a given timeout. The websocket connection to the WhatsAppWeb servers get´s established.
 The goroutine for handling incoming messages is started
 */
-func NewConn(timeout time.Duration, readBufferSize, writeBufferSize int) (*Conn, error) {
+func NewConn(timeout time.Duration, bufferOptions ...int) (*Conn, error) {
 	wac := &Conn{
 		handler:    make([]Handler, 0),
 		msgCount:   0,
@@ -122,11 +125,11 @@ func NewConn(timeout time.Duration, readBufferSize, writeBufferSize int) (*Conn,
 		longClientName:  "BrzoMessages",
 		shortClientName: "Brzo-Whatsapp",
 	}
-	return wac, wac.connect(readBufferSize, writeBufferSize)
+	return wac, wac.connect(bufferOptions...)
 }
 
 // NewConnWithProxy Create a new connect with a given timeout and a http proxy.
-func NewConnWithProxy(timeout time.Duration, proxy func(*http.Request) (*url.URL, error), readBufferSize, writeBufferSize int) (*Conn, error) {
+func NewConnWithProxy(timeout time.Duration, proxy func(*http.Request) (*url.URL, error), bufferOptions ...int) (*Conn, error) {
 	wac := &Conn{
 		handler:    make([]Handler, 0),
 		msgCount:   0,
@@ -137,11 +140,25 @@ func NewConnWithProxy(timeout time.Duration, proxy func(*http.Request) (*url.URL
 		shortClientName: "Brzo-Whatsapp",
 		Proxy:           proxy,
 	}
-	return wac, wac.connect(readBufferSize, writeBufferSize)
+	return wac, wac.connect(bufferOptions...)
 }
 
 // connect should be guarded with wsWriteMutex
-func (wac *Conn) connect(readBufferSize, writeBufferSize int) (err error) {
+func (wac *Conn) connect(bufferOptions ...int) (err error) {
+
+	var readBufferSize int
+	var writeBufferSize int
+	if len(bufferOptions) == 0 {
+		readBufferSize = 25
+		writeBufferSize = 10
+	} else {
+		readBufferSize = bufferOptions[0]
+		writeBufferSize = bufferOptions[1]
+	}
+
+	wac.ReadBufferSize = readBufferSize
+	wac.WriteBufferSize = writeBufferSize
+
 	if wac.connected {
 		return ErrAlreadyConnected
 	}
