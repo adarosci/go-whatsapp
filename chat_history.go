@@ -1,11 +1,13 @@
 package whatsapp
 
 import (
-	"github.com/adarosci/go-whatsapp/binary"
-	"github.com/adarosci/go-whatsapp/binary/proto"
 	"log"
 	"strconv"
 	"time"
+
+	"github.com/adarosci/go-whatsapp/binary"
+	"github.com/adarosci/go-whatsapp/binary/proto"
+	"github.com/pkg/errors"
 )
 
 type MessageOffsetInfo struct {
@@ -31,6 +33,42 @@ func decodeMessages(n *binary.Node) []*proto.WebMessageInfo {
 	}
 
 	return messages
+}
+
+// DonwloadMediaMessage load first message messageID
+func (wac *Conn) DonwloadMediaMessage(jid, messageID string) ([]byte, error) {
+
+	node, err := wac.query("message", jid, messageID, "before", "true", "", 1, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, msg := range decodeMessages(node) {
+		message := ParseProtoMessage(msg)
+		switch m := message.(type) {
+		case error:
+			return nil, m
+		case ImageMessage:
+			image := message.(ImageMessage)
+			return image.Download()
+		case VideoMessage:
+			video := message.(VideoMessage)
+			return video.Download()
+		case AudioMessage:
+			audio := message.(AudioMessage)
+			return audio.Download()
+		case DocumentMessage:
+			document := message.(DocumentMessage)
+			return document.Download()
+		case StickerMessage:
+			sticker := message.(StickerMessage)
+			return sticker.Download()
+		default:
+			return nil, errors.New("not message download")
+		}
+	}
+
+	return nil, errors.New("not message download")
 }
 
 // LoadChatMessages is useful to "scroll" messages, loading by count at a time
