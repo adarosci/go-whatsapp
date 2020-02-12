@@ -44,27 +44,36 @@ func (wac *Conn) DownloadMediaMessage(jid, messageID string) ([]byte, error) {
 	}
 
 	for _, msg := range decodeMessages(node) {
-		message := ParseProtoMessage(msg)
-		switch m := message.(type) {
-		case error:
-			return nil, m
-		case ImageMessage:
-			image := message.(ImageMessage)
-			return image.Download()
-		case VideoMessage:
-			video := message.(VideoMessage)
-			return video.Download()
-		case AudioMessage:
-			audio := message.(AudioMessage)
-			return audio.Download()
-		case DocumentMessage:
-			document := message.(DocumentMessage)
-			return document.Download()
-		case StickerMessage:
-			sticker := message.(StickerMessage)
-			return sticker.Download()
-		default:
-			return nil, errors.New("not message download")
+		node, err = wac.query("message", jid, *msg.Key.Id, "after", "true", "", 1, 0)
+		if err != nil {
+			node, err = wac.query("message", jid, *msg.Key.Id, "after", "false", "", 1, 0)
+			if err != nil {
+				return nil, err
+			}
+		}
+		for _, msg1 := range decodeMessages(node) {
+			message := ParseProtoMessage(msg1)
+			switch m := message.(type) {
+			case error:
+				return nil, m
+			case ImageMessage:
+				image := message.(ImageMessage)
+				return image.Download()
+			case VideoMessage:
+				video := message.(VideoMessage)
+				return video.Download()
+			case AudioMessage:
+				audio := message.(AudioMessage)
+				return audio.Download()
+			case DocumentMessage:
+				document := message.(DocumentMessage)
+				return document.Download()
+			case StickerMessage:
+				sticker := message.(StickerMessage)
+				return sticker.Download()
+			default:
+				return nil, errors.New("not message download")
+			}
 		}
 	}
 
