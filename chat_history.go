@@ -35,10 +35,10 @@ func decodeMessages(n *binary.Node) []*proto.WebMessageInfo {
 	return messages
 }
 
-// DonwloadMediaMessage load first message messageID
-func (wac *Conn) DonwloadMediaMessage(jid, messageID string) ([]byte, error) {
+// DownloadMediaMessage load first message messageID
+func (wac *Conn) DownloadMediaMessage(jid, messageID string) ([]byte, error) {
 
-	node, err := wac.query("message", jid, messageID, "before", "true", "", 1, 0)
+	node, err := wac.query("media", jid, messageID, "", "false", "", 0, 0)
 	if err != nil {
 		return nil, err
 	}
