@@ -2,12 +2,13 @@ package whatsapp
 
 import (
 	"fmt"
-	"github.com/Rhymen/go-whatsapp/binary"
 	"strconv"
 	"time"
+
+	"github.com/adarosci/go-whatsapp/binary"
 )
 
-// Pictures must be JPG 640x640 and 96x96, respectively
+// UploadProfilePic must be JPG 640x640 and 96x96, respectively
 func (wac *Conn) UploadProfilePic(image, preview []byte) (<-chan string, error) {
 	tag := fmt.Sprintf("%d.--%d", time.Now().Unix(), wac.msgCount*19)
 	n := binary.Node{
