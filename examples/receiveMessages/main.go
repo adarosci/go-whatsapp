@@ -43,10 +43,10 @@ func (*waHandler) HandleTextMessage(message whatsapp.TextMessage) {
 func (h *waHandler) HandleImageMessage(message whatsapp.ImageMessage) {
 	data, err := message.Download()
 	if err != nil {
-		if err != whatsapp.ErrMediaDownloadFailedWith410 && err != whatsapp.ErrMediaDownloadFailedWith410 {
+		if err != whatsapp.ErrMediaDownloadFailedWith410 && err != whatsapp.ErrMediaDownloadFailedWith404 {
 			return
 		}
-		if _, err = h.c.LoadMediaInfo(message.Info.SenderJid, message.Info.Id, strconv.FormatBool(message.Info.FromMe)); err == nil {
+		if _, err = h.c.LoadMediaInfo(message.Info.RemoteJid, message.Info.Id, strconv.FormatBool(message.Info.FromMe)); err == nil {
 			data, err = message.Download()
 			if err != nil {
 				return
@@ -64,7 +64,7 @@ func (h *waHandler) HandleImageMessage(message whatsapp.ImageMessage) {
 	if err != nil {
 		return
 	}
-	log.Printf("%v %v\n\timage reveived, saved at:%v\n", message.Info.Timestamp, message.Info.RemoteJid, filename)
+	log.Printf("%v %v\n\timage received, saved at:%v\n", message.Info.Timestamp, message.Info.RemoteJid, filename)
 }*/
 
 func main() {
