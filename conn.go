@@ -88,8 +88,9 @@ type Conn struct {
 	Store          *Store
 	ServerLastSeen time.Time
 
-	longClientName  string
-	shortClientName string
+	longClientName    string
+	shortClientName   string
+	versionClientName string
 
 	loginSessionLock sync.RWMutex
 	Proxy            func(*http.Request) (*url.URL, error)
