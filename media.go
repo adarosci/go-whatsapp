@@ -129,6 +129,13 @@ func (wac *Conn) queryMediaConn() (hostname, auth string, ttl int, err error) {
 	return resp.MediaConn.Hosts[0].Hostname, resp.MediaConn.Auth, resp.MediaConn.TTL, nil
 }
 
+var mediaTypeMap = map[MediaType]string{
+	MediaImage:    "/mms/image",
+	MediaVideo:    "/mms/video",
+	MediaDocument: "/mms/document",
+	MediaAudio:    "/mms/audio",
+}
+
 func (wac *Conn) Upload(reader io.Reader, appInfo MediaType) (downloadURL string, mediaKey []byte, fileEncSha256 []byte, fileSha256 []byte, fileLength uint64, err error) {
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
@@ -171,7 +178,7 @@ func (wac *Conn) Upload(reader io.Reader, appInfo MediaType) (downloadURL string
 	uploadURL := url.URL{
 		Scheme:   "https",
 		Host:     hostname,
-		Path:     fmt.Sprintf("/mms/image/%s", token),
+		Path:     fmt.Sprintf("%s/%s", mediaTypeMap[appInfo], token),
 		RawQuery: q.Encode(),
 	}
 
