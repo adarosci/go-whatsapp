@@ -2,9 +2,10 @@ package whatsapp
 
 import (
 	"fmt"
-	"github.com/adarosci/go-whatsapp/binary"
 	"strconv"
 	"time"
+
+	"github.com/adarosci/go-whatsapp/binary"
 )
 
 type Presence string
@@ -101,6 +102,10 @@ func (wac *Conn) Contacts() (*binary.Node, error) {
 
 func (wac *Conn) Chats() (*binary.Node, error) {
 	return wac.query("chat", "", "", "", "", "", 0, 0)
+}
+
+func (wac *Conn) LoadChats(jid string) (*binary.Node, error) {
+	return wac.query("chat", jid, "", "", "", "", 0, 0)
 }
 
 func (wac *Conn) Read(jid, id string) (<-chan string, error) {
