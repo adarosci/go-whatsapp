@@ -47,9 +47,20 @@ func (wac *Conn) LoadMessages(jid, messageId string, count int) (*binary.Node, e
 func (wac *Conn) LoadMessage(jid, messageId string) (*binary.Node, error) {
 	node, err := wac.query("message", jid, messageId, "", "false", "", 1, 0)
 	if err != nil {
-		return wac.query("message", jid, messageId, "", "true", "", 1, 0)
+		return nil, err
 	}
-	return node, err
+
+	for _, msg := range decodeMessages(node) {
+		node, err = wac.query("message", jid, *msg.Key.Id, "after", "true", "", 1, 0)
+		if err != nil {
+			node, err = wac.query("message", jid, *msg.Key.Id, "after", "false", "", 1, 0)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return node, err
+	}
+	return nil, err
 }
 
 func (wac *Conn) LoadMessagesBefore(jid, messageId string, count int) (*binary.Node, error) {
