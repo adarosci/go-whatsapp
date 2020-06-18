@@ -312,7 +312,13 @@ func (wac *Conn) handleContacts(contacts interface{}) {
 			continue
 		}
 
-		jid := strings.Replace(contactNode.Attributes["jid"], "@c.us", "@s.whatsapp.net", 1)
+		var jid string
+		split := strings.Split(contactNode.Attributes["jid"], "@")
+		if split[1] == "c.us" {
+			jid = split[0] + "@s.whatsapp.net"
+		} else {
+			jid = split[0] + "@" + split[1]
+		}
 		contactList = append(contactList, Contact{
 			jid,
 			contactNode.Attributes["notify"],
@@ -343,7 +349,13 @@ func (wac *Conn) handleChats(chats interface{}) {
 			continue
 		}
 
-		jid := strings.Replace(chatNode.Attributes["jid"], "@c.us", "@s.whatsapp.net", 1)
+		var jid string
+		split := strings.Split(chatNode.Attributes["jid"], "@")
+		if split[1] == "c.us" {
+			jid = split[0] + "@s.whatsapp.net"
+		} else {
+			jid = split[0] + "@" + split[1]
+		}
 		chatList = append(chatList, Chat{
 			jid,
 			chatNode.Attributes["name"],
