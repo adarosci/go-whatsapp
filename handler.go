@@ -303,6 +303,11 @@ func (wac *Conn) handleWithCustomHandlers(message interface{}, handlers []Handle
 func (wac *Conn) handleContacts(contacts interface{}) {
 	var contactList []Contact
 	c, ok := contacts.([]interface{})
+	defer func() {
+		contactList = []Contact{}
+		contacts = nil
+		c = nil
+	}()
 	if !ok {
 		return
 	}
@@ -340,6 +345,11 @@ func (wac *Conn) handleContacts(contacts interface{}) {
 func (wac *Conn) handleChats(chats interface{}) {
 	var chatList []Chat
 	c, ok := chats.([]interface{})
+	defer func() {
+		chatList = []Chat{}
+		chats = nil
+		c = nil
+	}()
 	if !ok {
 		return
 	}
