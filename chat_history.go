@@ -118,9 +118,9 @@ func (wac *Conn) LoadChatMessages(jid string, count int, messageId string, owner
 // chunkSize = how many messages to load with one query; if handlers == nil the func will use default handlers;
 // pauseBetweenQueries = how much time to sleep between queries
 func (wac *Conn) LoadFullChatHistory(jid string, chunkSize int,
-	pauseBetweenQueries time.Duration, handlers ...Handler) {
+	pauseBetweenQueries time.Duration, handlers ...Handler) error {
 	if chunkSize <= 0 {
-		return
+		return nil
 	}
 
 	if handlers == nil {
@@ -130,35 +130,60 @@ func (wac *Conn) LoadFullChatHistory(jid string, chunkSize int,
 	beforeMsg := ""
 	beforeMsgIsOwner := true
 
-	for {
-		if wac == nil {
-			return
-		}
+	c := make(chan bool)
+	quit := false
 
-		node, err := wac.query("message", jid, beforeMsg, "before",
-			strconv.FormatBool(beforeMsgIsOwner), "", chunkSize, 0)
-
-		if err != nil {
-			wac.handleWithCustomHandlers(err, handlers)
-		} else {
-
-			msgs := decodeMessages(node)
-			for _, msg := range msgs {
-				wac.handleWithCustomHandlers(ParseProtoMessage(msg), handlers)
-				wac.handleWithCustomHandlers(msg, handlers)
+	go func() {
+		for {
+			if wac == nil || quit {
+				return
 			}
 
-			if len(msgs) == 0 {
-				break
+			node, err := wac.query("message", jid, beforeMsg, "before",
+				strconv.FormatBool(beforeMsgIsOwner), "", chunkSize, 0)
+
+			if err != nil {
+				wac.handleWithCustomHandlers(err, handlers)
+			} else {
+
+				msgs := decodeMessages(node)
+				for _, msg := range msgs {
+					wac.handleWithCustomHandlers(ParseProtoMessage(msg), handlers)
+					wac.handleWithCustomHandlers(msg, handlers)
+				}
+
+				c <- true
+				if len(msgs) == 0 {
+					break
+				}
+
+				beforeMsg = *msgs[0].Key.Id
+				beforeMsgIsOwner = msgs[0].Key.FromMe != nil && *msgs[0].Key.FromMe
+
 			}
 
-			beforeMsg = *msgs[0].Key.Id
-			beforeMsgIsOwner = msgs[0].Key.FromMe != nil && *msgs[0].Key.FromMe
+			<-time.After(pauseBetweenQueries)
 		}
+	}()
 
-		<-time.After(pauseBetweenQueries)
+	var err error
+
+	select {
+	case <-c:
+		{
+			err = nil
+		}
+	case <-time.After(time.Second * 30):
+		{
+			err = errors.New("timeout chat full")
+		}
 	}
 
+	quit = true
+
+	close(c)
+
+	return err
 }
 
 // LoadFullChatHistoryAfter loads all messages after the specified messageId
