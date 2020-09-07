@@ -131,6 +131,10 @@ func (wac *Conn) LoadFullChatHistory(jid string, chunkSize int,
 	beforeMsgIsOwner := true
 
 	for {
+		if wac == nil {
+			return
+		}
+
 		node, err := wac.query("message", jid, beforeMsg, "before",
 			strconv.FormatBool(beforeMsgIsOwner), "", chunkSize, 0)
 
@@ -153,7 +157,6 @@ func (wac *Conn) LoadFullChatHistory(jid string, chunkSize int,
 		}
 
 		<-time.After(pauseBetweenQueries)
-
 	}
 
 }
