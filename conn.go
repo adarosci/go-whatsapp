@@ -98,9 +98,6 @@ type Conn struct {
 	Proxy            func(*http.Request) (*url.URL, error)
 
 	writerLock sync.RWMutex
-
-	ReadBufferSize  int
-	WriteBufferSize int
 }
 
 type websocketWrapper struct {
@@ -118,53 +115,67 @@ type listenerWrapper struct {
 Creates a new connection with a given timeout. The websocket connection to the WhatsAppWeb servers get´s established.
 The goroutine for handling incoming messages is started
 */
-func NewConn(timeout time.Duration, bufferOptions ...int) (*Conn, error) {
-	wac := &Conn{
-		handler:    make([]Handler, 0),
-		msgCount:   0,
-		msgTimeout: timeout,
-		Store:      newStore(),
-
-		
-		clientVersion:   "0.1.0",
-		longClientName:  "BrzoMessages",
-		shortClientName: "Brzo-Whatsapp",
-	}
-	return wac, wac.connect(bufferOptions...)
+func NewConn(timeout time.Duration) (*Conn, error) {
+	return NewConnWithOptions(&Options{
+		Timeout: timeout,
+	})
 }
 
 // NewConnWithProxy Create a new connect with a given timeout and a http proxy.
-func NewConnWithProxy(timeout time.Duration, proxy func(*http.Request) (*url.URL, error), bufferOptions ...int) (*Conn, error) {
+func NewConnWithProxy(timeout time.Duration, proxy func(*http.Request) (*url.URL, error)) (*Conn, error) {
+	return NewConnWithOptions(&Options{
+		Timeout: timeout,
+		Proxy: proxy,
+	})
+}
+
+// NewConnWithOptions Create a new connect with a given options.
+type Options struct {
+	Proxy            func(*http.Request) (*url.URL, error)
+	Timeout          time.Duration
+	Handler          []Handler
+	ShortClientName  string
+	LongClientName   string
+	ClientVersion    string
+	Store            *Store
+}
+func NewConnWithOptions(opt *Options) (*Conn, error) {
+	if opt == nil {
+		return nil, ErrOptionsNotProvided
+	}
 	wac := &Conn{
 		handler:    make([]Handler, 0),
 		msgCount:   0,
-		msgTimeout: timeout,
+		msgTimeout: opt.Timeout,
 		Store:      newStore(),
 
 		longClientName:  "BrzoMessages",
 		shortClientName: "brzo-whatsapp",
 		clientVersion:   "0.1.0",
-		Proxy:           proxy,
 	}
-	return wac, wac.connect(bufferOptions...)
+	if opt.Handler != nil {
+		wac.handler = opt.Handler
+	}
+	if opt.Store != nil {
+		wac.Store = opt.Store
+	}
+	if opt.Proxy != nil {
+		wac.Proxy = opt.Proxy
+	}
+	if len(opt.ShortClientName) != 0 {
+		wac.shortClientName = opt.ShortClientName
+	}
+	if len(opt.LongClientName) != 0 {
+		wac.longClientName = opt.LongClientName
+	}
+	if len(opt.ClientVersion) != 0 {
+		wac.clientVersion = opt.ClientVersion
+	}
+	return wac, wac.connect()
 }
 
 // connect should be guarded with wsWriteMutex
-func (wac *Conn) connect(bufferOptions ...int) (err error) {
-
-	var readBufferSize int
-	var writeBufferSize int
-	if len(bufferOptions) == 0 {
-		readBufferSize = 25
-		writeBufferSize = 10
-	} else {
-		readBufferSize = bufferOptions[0]
-		writeBufferSize = bufferOptions[1]
-	}
-
-	wac.ReadBufferSize = readBufferSize
-	wac.WriteBufferSize = writeBufferSize
-
+func (wac *Conn) connect() (err error) {
 	if wac.connected {
 		return ErrAlreadyConnected
 	}
@@ -267,10 +278,26 @@ func (wac *Conn) keepAlive(minIntervalMs int, maxIntervalMs int) {
 	}
 }
 
-func (wac *Conn) GetConnected() bool {
-	return  wac.connected
+// IsConnected returns whether the server connection is established or not
+func (wac *Conn) IsConnected() bool {
+	return wac.connected
 }
 
+// GetConnected returns whether the server connection is established or not
+//
+// Deprecated: function name is not go idiomatic, use IsConnected instead
+func (wac *Conn) GetConnected() bool {
+	return wac.connected
+}
+
+//IsLoggedIn returns whether the you are logged in or not
+func (wac *Conn) IsLoggedIn() bool {
+	return wac.loggedIn
+}
+
+// GetLoggedIn returns whether the you are logged in or not
+//
+// Deprecated: function name is not go idiomatic, use IsLoggedIn instead.
 func (wac *Conn) GetLoggedIn() bool {
-	return  wac.loggedIn
+	return wac.loggedIn
 }
