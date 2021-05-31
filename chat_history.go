@@ -35,6 +35,54 @@ func decodeMessages(n *binary.Node) []*proto.WebMessageInfo {
 	return messages
 }
 
+// ContextInfo load first message messageID
+func (wac *Conn) ContextInfo(jid, messageID string) ContextInfo {
+
+	node, err := wac.query("message", jid, messageID, "", "false", "", 1, 0)
+	if err != nil {
+		return ContextInfo{}
+	}
+
+	for _, msg := range decodeMessages(node) {
+		node, err = wac.query("message", jid, *msg.Key.Id, "after", "true", "", 1, 0)
+		if err != nil {
+			node, err = wac.query("message", jid, *msg.Key.Id, "after", "false", "", 1, 0)
+			if err != nil {
+				return ContextInfo{}
+			}
+		}
+		for _, msg1 := range decodeMessages(node) {
+			message := ParseProtoMessage(msg1)
+			switch message.(type) {
+			case error:
+				return ContextInfo{}
+			case ImageMessage:
+				image := message.(ImageMessage)
+				return image.ContextInfo
+			case TextMessage:
+				image := message.(TextMessage)
+				return image.ContextInfo
+			case VideoMessage:
+				video := message.(VideoMessage)
+				return video.ContextInfo
+			case AudioMessage:
+				audio := message.(AudioMessage)
+				return audio.ContextInfo
+			case DocumentMessage:
+				document := message.(DocumentMessage)
+				return document.ContextInfo
+			case StickerMessage:
+				sticker := message.(StickerMessage)
+				return sticker.ContextInfo
+			default:
+				return ContextInfo{}
+			}
+		}
+	}
+
+	return ContextInfo{}
+}
+
 // DownloadMediaMessage load first message messageID
 func (wac *Conn) DownloadMediaMessage(jid, messageID string) ([]byte, error) {
 
