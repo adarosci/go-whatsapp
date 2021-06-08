@@ -36,11 +36,11 @@ func decodeMessages(n *binary.Node) []*proto.WebMessageInfo {
 }
 
 // ContextInfo load first message messageID
-func (wac *Conn) ContextInfo(jid, messageID string) ContextInfo {
+func (wac *Conn) LoadMessageByID(jid, messageID string) *proto.WebMessageInfo {
 
 	node, err := wac.query("message", jid, messageID, "", "false", "", 1, 0)
 	if err != nil {
-		return ContextInfo{}
+		return nil
 	}
 
 	for _, msg := range decodeMessages(node) {
@@ -48,39 +48,15 @@ func (wac *Conn) ContextInfo(jid, messageID string) ContextInfo {
 		if err != nil {
 			node, err = wac.query("message", jid, *msg.Key.Id, "after", "false", "", 1, 0)
 			if err != nil {
-				return ContextInfo{}
+				return nil
 			}
 		}
 		for _, msg1 := range decodeMessages(node) {
-			message := ParseProtoMessage(msg1)
-			switch message.(type) {
-			case error:
-				return ContextInfo{}
-			case ImageMessage:
-				image := message.(ImageMessage)
-				return image.ContextInfo
-			case TextMessage:
-				image := message.(TextMessage)
-				return image.ContextInfo
-			case VideoMessage:
-				video := message.(VideoMessage)
-				return video.ContextInfo
-			case AudioMessage:
-				audio := message.(AudioMessage)
-				return audio.ContextInfo
-			case DocumentMessage:
-				document := message.(DocumentMessage)
-				return document.ContextInfo
-			case StickerMessage:
-				sticker := message.(StickerMessage)
-				return sticker.ContextInfo
-			default:
-				return ContextInfo{}
-			}
+			return msg1
 		}
 	}
 
-	return ContextInfo{}
+	return nil
 }
 
 // DownloadMediaMessage load first message messageID
